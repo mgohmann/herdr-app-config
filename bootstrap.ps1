@@ -70,6 +70,29 @@ if (Test-Path $SourceMods) {
     }
 }
 
+# 2b. Themes: copy vendored themes, and select vesper if no theme is chosen yet
+$HerdrThemesDir = Join-Path $HerdrConfigDir "themes"
+$SourceThemes = Join-Path $RepoRoot "herdr	hemes"
+if (Test-Path $SourceThemes) {
+    New-Item -ItemType Directory -Force -Path $HerdrThemesDir | Out-Null
+    Get-ChildItem $SourceThemes -Filter *.json | ForEach-Object {
+        $dest = Join-Path $HerdrThemesDir $_.Name
+        if ((Test-Path $dest) -and ((Get-FileHash $dest).Hash -ne (Get-FileHash $_.FullName).Hash) -and -not $Force) {
+            $ans = Read-Host "Theme '$($_.Name)' already exists and differs. Overwrite? [y/N]"
+            if ($ans -notin @('y', 'Y', 'yes')) { Write-Host "Skipped theme: $($_.Name)" -ForegroundColor Yellow; return }
+        }
+        Copy-Item -Force $_.FullName $dest
+        Write-Host "Installed theme: $($_.Name)" -ForegroundColor Green
+    }
+    $SettingsFile = Join-Path $HerdrConfigDir "settings.json"
+    $settings = if (Test-Path $SettingsFile) { Get-Content $SettingsFile -Raw | ConvertFrom-Json -AsHashtable } else { @{} }
+    if (-not $settings.ContainsKey("theme")) {
+        $settings["theme"] = "vesper"
+        $settings | ConvertTo-Json -Depth 20 | Set-Content $SettingsFile -Encoding utf8
+        Write-Host "Set theme: vesper" -ForegroundColor Green
+    }
+}
+
 # 3b. Build branch-pr Go helper if Go is available
 $BranchPrDir = Join-Path $HerdrModsDir "branch-pr"
 $BranchPrHelper = Join-Path $BranchPrDir "helper"
@@ -90,18 +113,9 @@ if (Test-Path $BranchPrHelper) {
     }
 }
 
-# 3c. Optional: Revive (herdr-revive, resumes Claude Code sessions after a reboot)
-# The mod itself is copied above. This step wires up the Claude Code hooks and the
-# PowerShell profile block. It edits ~/.claude/settings.json and $PROFILE (backups: *.revive-backup).
-$ReviveEngine = Join-Path $HerdrModsDir "revive\revive.mjs"
-if ((Test-Path $ReviveEngine) -and (Get-Command node -ErrorAction SilentlyContinue)) {
-    $reviveOptIn = Read-Host "`nInstall Revive hooks (Claude Code SessionStart/SessionEnd + PowerShell profile block)? [y/N]"
-    if ($reviveOptIn -in @('y', 'Y', 'yes')) {
-        node $ReviveEngine install --pwsh --no-codex --no-pi --no-omp --no-droid --no-cursor --no-copilot --no-muse
-        node $ReviveEngine doctor
-    } else {
-        Write-Host "Skipped Revive hooks. Run later: node `"$ReviveEngine`" install --pwsh --no-codex --no-pi --no-omp --no-droid --no-cursor --no-copilot --no-muse" -ForegroundColor Yellow
-    }
+# 3c. PocketSpeak: every variant's layout depends on it, but it is installed by its own tool
+if (-not (Test-Path (Join-Path $HerdrModsDir "pocketspeak"))) {
+    Write-Host "Warning: the pocketspeak mod is not installed. Run: pocketspeak plugin install herdr-app" -ForegroundColor Yellow
 }
 
 # 4. Optional: GitHub Copilot CLI (opt-in)
@@ -119,6 +133,15 @@ if ($copilotOptIn -in @('y', 'Y', 'yes')) {
     } else {
         Write-Host "GitHub CLI (gh) not found. Install it from https://cli.github.com/ first." -ForegroundColor Yellow
     }
+}
+
+# 5. Apply the estro variant: layout-scoped keys, Revive hooks, and switch to it.
+# (Needs the Herdr app to have been opened once; otherwise run switch-layout.ps1 later.)
+try {
+    & (Join-Path $RepoRoot "switch-layout.ps1") estro
+} catch {
+    Write-Host "Could not apply the estro variant: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host "Run later: .\switch-layout.ps1 estro" -ForegroundColor Yellow
 }
 
 Write-Host "`nDone! Restart or reload Herdr to apply changes." -ForegroundColor Cyan

@@ -235,6 +235,7 @@ export const sidebarMethods = {
           label: "Commit message",
         }),
       )
+      .child(this.renderWriteMessage())
       .child(this.renderCommitButton())
       .when(Boolean(hint), (el) =>
         el.child(
@@ -244,6 +245,23 @@ export const sidebarMethods = {
             .whitespace_normal()
             .child(hint ?? ""),
         ),
+      );
+  },
+
+  // The AI draft button, see ai.js.
+  renderWriteMessage() {
+    const ok = this.canWriteMessage();
+    return h_flex()
+      .flex_none()
+      .justify_end()
+      .child(
+        TextButton({
+          id: "write-message",
+          icon: this.aiBusy ? "refresh" : "sparkle",
+          label: this.aiBusy ? "Writing…" : "Write message",
+          disabled: !ok,
+          onClick: (cx) => this.writeMessage(cx),
+        }),
       );
   },
 

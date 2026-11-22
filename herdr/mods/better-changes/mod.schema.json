@@ -128,7 +128,7 @@
           "properties": {
             "view": {
               "title": "File list",
-              "description": "How file lists start, until you choose in the ⋮ menu.",
+              "description": "How file lists start, until you choose in the \u22ee menu.",
               "type": "string",
               "enum": [
                 "tree",
@@ -142,7 +142,7 @@
             },
             "diff": {
               "title": "Diff",
-              "description": "How diffs start, until you choose in the ⋮ menu.",
+              "description": "How diffs start, until you choose in the \u22ee menu.",
               "type": "string",
               "enum": [
                 "inline",
@@ -165,6 +165,79 @@
               "description": "Lets the panel key close an open panel, instead of leaving it alone.",
               "type": "boolean",
               "default": false
+            }
+          }
+        },
+        "ai": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "harness": {
+              "title": "Agent for Write message",
+              "description": "auto uses the agent running in this tab, else the first installed.",
+              "type": "string",
+              "default": "auto",
+              "enum": [
+                "auto",
+                "claude",
+                "antigravity",
+                "copilot",
+                "opencode"
+              ]
+            },
+            "effort": {
+              "title": "Effort",
+              "description": "Reasoning effort asked of every agent.",
+              "type": "string",
+              "default": "low",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "timeout": {
+              "title": "Timeout",
+              "description": "How long to wait for the agent.",
+              "type": [
+                "string",
+                "integer"
+              ],
+              "format": "duration",
+              "pattern": "^\\s*\\d+(\\.\\d+)?\\s*(ms|s|m|h)\\s*$",
+              "default": "90s"
+            },
+            "diff_limit": {
+              "title": "Diff characters",
+              "description": "The most staged-diff characters sent. Windows limits one command line to about 32K.",
+              "type": "integer",
+              "minimum": 1000,
+              "x-step": 1000,
+              "default": 20000
+            },
+            "claude_model": {
+              "title": "Claude Code model",
+              "description": "",
+              "type": "string",
+              "default": "haiku"
+            },
+            "antigravity_model": {
+              "title": "Antigravity model",
+              "description": "An agy model id; the effort is appended when it has no suffix.",
+              "type": "string",
+              "default": "gemini-4-hydrogen"
+            },
+            "copilot_model": {
+              "title": "Copilot model",
+              "description": "",
+              "type": "string",
+              "default": "gpt-6-luna"
+            },
+            "opencode_model": {
+              "title": "OpenCode model",
+              "description": "provider/model",
+              "type": "string",
+              "default": "openrouter/openai/gpt-6-luna"
             }
           }
         }

@@ -14,6 +14,7 @@ import { loadSettings, duration } from "./settings.js";
 import { followFileIcons } from "./file-icons.js";
 import { panelCommands } from "./panel.js";
 import { gitMethods } from "./git/repository.js";
+import { aiMethods } from "./ai.js";
 import { sidebarMethods } from "./views/sidebar.js";
 import { diffMethods } from "./views/diff.js";
 import { paneHeaderMethods } from "./views/pane-header.js";
@@ -26,6 +27,18 @@ const DEFAULT_SETTINGS = {
   limits: { files: 1000, diff_lines: 1500, line_length: 4000, commits_per_page: 50 },
   default: { view: "tree", diff: "inline" },
   panel: { toggle: false },
+  // "Write message": harness is "auto" (the agent running in this tab) or claude,
+  // antigravity, copilot, opencode. Each takes its own model; effort applies to all.
+  ai: {
+    harness: "auto",
+    effort: "low",
+    timeout: "90s",
+    diff_limit: 20000,
+    claude_model: "haiku",
+    antigravity_model: "gemini-4-hydrogen",
+    copilot_model: "gpt-6-luna",
+    opencode_model: "openrouter/openai/gpt-6-luna",
+  },
 };
 
 class BetterChanges extends View {
@@ -104,6 +117,8 @@ class BetterChanges extends View {
     this.amendLoading = false;
     this.amendHead = null;
     this.typing = false;
+    this.aiBusy = false;
+    this.aiDraft = null;
     // Enter makes a new line here; only the button commits.
     this.input = TextareaState.new({ placeholder: "Commit message", rows: 4 });
     this.input.on("change", (_e, cx) => {
@@ -190,6 +205,6 @@ class BetterChanges extends View {
   }
 }
 
-Object.assign(BetterChanges.prototype, gitMethods, sidebarMethods, diffMethods, paneHeaderMethods);
+Object.assign(BetterChanges.prototype, gitMethods, aiMethods, sidebarMethods, diffMethods, paneHeaderMethods);
 
 export default BetterChanges;
