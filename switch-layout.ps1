@@ -119,6 +119,19 @@ if ($variant.ContainsKey("config")) {
     }
 }
 
+# 4b. Revive: make sure its hooks (Claude Code + PowerShell profile) are installed
+if ("revive" -in $variant["mods"]) {
+    $engine = Join-Path $Home_ "mods\revive\revive.mjs"
+    if ((Test-Path $engine) -and (Get-Command node -ErrorAction SilentlyContinue)) {
+        $doc = (& node $engine doctor 2>&1 | Out-String | ConvertFrom-Json -AsHashtable)
+        if ($doc["claude"] -and $doc["shell"]["pwsh"]) { Say "  revive hooks : installed" DarkGray }
+        else {
+            Say "  revive hooks : installing" Green
+            if (-not $DryRun) { & node $engine install --pwsh --no-codex --no-pi --no-omp --no-droid --no-cursor --no-copilot --no-muse | Out-Null }
+        }
+    }
+}
+
 # 5. Check changed mods, then switch
 if (-not $DryRun) {
     foreach ($m in $changedMods) {
