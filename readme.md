@@ -30,9 +30,9 @@ Pass `-Force` to overwrite existing layouts/mods without prompting:
 .ootstrap.ps1 -Force
 ```
 
-## Write message (AI commit drafts)
+## Write commit message (AI commit drafts)
 
-`better-changes` is patched here with a **Write message** button above Commit (`herdr/mods/better-changes/ai.js`; upstream has no such feature, so re-apply it if you update the vendored mod). It sends the staged diff, the changed-file stat, the branch and your last 8 commit messages to a coding-agent CLI run once, non-interactively, with tools off (or a read-only agent) in a neutral folder, then fills the message box. It never commits, and never replaces text you typed.
+`better-changes` is patched here with a **Write commit message** button above Commit (`herdr/mods/better-changes/ai.js`; upstream has no such feature, so re-apply it if you update the vendored mod). It sends the staged diff, the changed-file stat, the branch and your last 8 commit messages to a coding-agent CLI run once, non-interactively, with tools off (or a read-only agent) in a neutral folder, then fills the message box. It never commits, and never replaces text you typed.
 
 It uses the agent running in the current tab, else the first installed in this order. Defaults (override under `settings.ai` in the installed `mods/better-changes/mod.json`):
 
@@ -42,6 +42,8 @@ It uses the agent running in the current tab, else the first installed in this o
 | Antigravity | `agy -p --mode plan` | `gemini-4-hydrogen-low` | low |
 | Copilot | `copilot -p -s` | `gpt-6-luna` | low |
 | OpenCode | `opencode run --agent plan` | `openrouter/openai/gpt-6-luna#low` | low |
+
+The same row has a **Sync** button like VS Code's: it shows how far the branch is behind (↓) and ahead (↑) of its upstream as of the last fetch, and clicking it runs `git pull` then `git push`. A branch with no upstream shows **Publish** (`git push -u <remote> HEAD`). Pull uses `--ff-only` when nothing is ahead, otherwise your pull settings; any failure is shown in the panel.
 
 Set `ai.harness` to `claude`, `antigravity`, `copilot` or `opencode` to pin one. The diff is capped at 20,000 characters (`ai.diff_limit`) to stay under Windows' command-line limit. The staged diff goes to whichever provider the chosen CLI uses.
 

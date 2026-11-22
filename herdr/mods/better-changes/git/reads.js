@@ -29,6 +29,21 @@ export async function readStatus(git) {
   };
 }
 
+// How far the branch is from its upstream as of the last fetch (nothing here
+// fetches), or, with no upstream, the remote a first push would publish to.
+// Null with neither.
+export async function readSyncState(git) {
+  const counts = await git(["rev-list", "--left-right", "--count", "HEAD...@{u}"]);
+  if (counts.code === 0) {
+    const [ahead, behind] = counts.stdout.trim().split(/\s+/).map(Number);
+    return { upstream: true, remote: null, ahead: ahead || 0, behind: behind || 0 };
+  }
+  const remotes = await git(["remote"]);
+  const names = remotes.code === 0 ? lines(remotes.stdout).map((n) => n.trim()) : [];
+  if (!names.length) return null;
+  return { upstream: false, remote: names.includes("origin") ? "origin" : names[0], ahead: 0, behind: 0 };
+}
+
 // The current branch, and "owner/repo" when origin is on GitHub.
 export async function readBranchAndRepo(git) {
   const branch = await git(["rev-parse", "--abbrev-ref", "HEAD"]);

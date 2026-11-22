@@ -247,7 +247,7 @@ export const aiMethods = {
           this.input.set_value(message);
         } else this.note = "Kept the message you typed; clear the box to use a new draft.";
       } catch (error) {
-        if (this.isCurrent(context)) this.note = `Write message failed: ${error.message}`;
+        if (this.isCurrent(context)) this.note = `Write commit message failed: ${error.message}`;
       } finally {
         this.aiBusy = false;
         cx.notify();

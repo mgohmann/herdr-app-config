@@ -9,6 +9,7 @@ import {
   readBehind,
   readLog,
   readCommitFiles,
+  readSyncState,
 } from "./reads.js";
 
 // Reads must not take optional index locks or start fsmonitor helpers.
@@ -160,6 +161,9 @@ export const gitMethods = {
     this.committed = committed;
     this.branch = branch;
     this.repo = repo;
+    // A detached HEAD has no branch to publish or sync.
+    this.sync = this.hasHead && branch && branch !== "HEAD" ? await readSyncState(git) : null;
+    if (!this.isCurrent(context)) return;
     if (this.tab === "commit") this.loadCommits(cx);
   },
 
@@ -296,6 +300,58 @@ export const gitMethods = {
           this.commitsLoading = false;
           cx.notify();
         }
+      }
+    });
+  },
+
+  // ── Sync ──────────────────────────────────────────────────────────────────
+
+  canSync() {
+    return Boolean(
+      this.root &&
+        this.sync &&
+        !this.busy &&
+        !this.loading &&
+        !this.conflicts &&
+        this.contextKey() === this.context,
+    );
+  },
+
+  // Like the editor's Sync: pull, then push what is ahead. A branch with no
+  // upstream is published instead. The first failure stops it and is shown.
+  syncChanges(cx) {
+    if (!this.canSync()) return;
+    const { root, on, context, sync } = this;
+    this.busy = true;
+    this.operation = "sync";
+    this.note = null;
+    cx.notify();
+    cx.spawn(async (cx) => {
+      const run = async (args) => {
+        const result = await exec("git", args, { cwd: root, on, timeout: 120000 });
+        if (result.code !== 0) {
+          const text = (result.stderr || result.stdout).trim().split("
+").filter(Boolean);
+          throw Error(`git ${args[0]}: ${text.slice(-2).join(" ") || `exit ${result.code}`}`);
+        }
+      };
+      try {
+        if (sync.upstream) {
+          // Fast-forward only when we have nothing to merge; otherwise follow the person's pull settings.
+          await run(sync.ahead ? ["pull", "--no-edit"] : ["pull", "--ff-only"]);
+          if (sync.ahead) await run(["push"]);
+        } else {
+          await run(["push", "-u", sync.remote, "HEAD"]);
+        }
+        this.reload = Date.now();
+        setShared("better-changes.reload", { root, on: on ?? null, at: this.reload });
+      } catch (error) {
+        if (this.isCurrent(context)) this.note = `Sync failed: ${error.message}`;
+      } finally {
+        this.busy = false;
+        this.operation = null;
+        this.refresh(cx);
+        cx.notify();
       }
     });
   },

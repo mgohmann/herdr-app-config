@@ -235,7 +235,7 @@ export const sidebarMethods = {
           label: "Commit message",
         }),
       )
-      .child(this.renderWriteMessage())
+      .child(this.renderCommitTools())
       .child(this.renderCommitButton())
       .when(Boolean(hint), (el) =>
         el.child(
@@ -248,18 +248,37 @@ export const sidebarMethods = {
       );
   },
 
-  // The AI draft button, see ai.js.
-  renderWriteMessage() {
-    const ok = this.canWriteMessage();
+  syncLabel() {
+    const s = this.sync;
+    if (this.operation === "sync") return s.upstream ? "Syncing…" : "Publishing…";
+    if (!s.upstream) return "Publish";
+    const counts = [s.behind && `${s.behind}↓`, s.ahead && `${s.ahead}↑`].filter(Boolean);
+    return counts.length ? `Sync ${counts.join(" ")}` : "Sync";
+  },
+
+  // Sync (pull, then push) on the left, the AI draft button (see ai.js) on the right.
+  renderCommitTools() {
     return h_flex()
       .flex_none()
-      .justify_end()
+      .justify_between()
+      .items_center()
+      .child(
+        this.sync
+          ? TextButton({
+              id: "sync",
+              icon: "refresh",
+              label: this.syncLabel(),
+              disabled: !this.canSync(),
+              onClick: (cx) => this.syncChanges(cx),
+            })
+          : div(),
+      )
       .child(
         TextButton({
           id: "write-message",
           icon: this.aiBusy ? "refresh" : "sparkle",
-          label: this.aiBusy ? "Writing…" : "Write message",
-          disabled: !ok,
+          label: this.aiBusy ? "Writing…" : "Write commit message",
+          disabled: !this.canWriteMessage(),
           onClick: (cx) => this.writeMessage(cx),
         }),
       );

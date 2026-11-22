@@ -118,6 +118,7 @@ class BetterChanges extends View {
     this.amendHead = null;
     this.typing = false;
     this.aiBusy = false;
+    this.sync = null;
     this.aiDraft = null;
     // Enter makes a new line here; only the button commits.
     this.input = TextareaState.new({ placeholder: "Commit message", rows: 4 });
