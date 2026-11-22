@@ -62,10 +62,18 @@ if (Test-Path $SourceMods) {
                 return
             }
         }
+        # Built artifacts (e.g. branch-pr/bin/herdr-pr.exe) are not in the repo; keep them across the overwrite.
+        $keepBin = $null
+        $destBin = Join-Path $dest "bin"
+        if (Test-Path $destBin) {
+            $keepBin = Join-Path ([IO.Path]::GetTempPath()) ("herdr-bin-" + [guid]::NewGuid())
+            Move-Item $destBin $keepBin
+        }
         if (Test-Path $dest) {
             Remove-Item -Recurse -Force $dest
         }
         Copy-Item -Recurse -Force $_.FullName $dest
+        if ($keepBin) { Move-Item $keepBin (Join-Path $dest "bin") }
         Write-Host "Installed mod: $($_.Name)" -ForegroundColor Green
     }
 }

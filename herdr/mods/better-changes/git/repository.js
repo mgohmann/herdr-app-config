@@ -330,8 +330,7 @@ export const gitMethods = {
       const run = async (args) => {
         const result = await exec("git", args, { cwd: root, on, timeout: 120000 });
         if (result.code !== 0) {
-          const text = (result.stderr || result.stdout).trim().split("
-").filter(Boolean);
+          const text = (result.stderr || result.stdout).trim().split("\n").filter(Boolean);
           throw Error(`git ${args[0]}: ${text.slice(-2).join(" ") || `exit ${result.code}`}`);
         }
       };
