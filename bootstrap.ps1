@@ -90,6 +90,20 @@ if (Test-Path $BranchPrHelper) {
     }
 }
 
+# 3c. Optional: Revive (herdr-revive, resumes Claude Code sessions after a reboot)
+# The mod itself is copied above. This step wires up the Claude Code hooks and the
+# PowerShell profile block. It edits ~/.claude/settings.json and $PROFILE (backups: *.revive-backup).
+$ReviveEngine = Join-Path $HerdrModsDir "revive\revive.mjs"
+if ((Test-Path $ReviveEngine) -and (Get-Command node -ErrorAction SilentlyContinue)) {
+    $reviveOptIn = Read-Host "`nInstall Revive hooks (Claude Code SessionStart/SessionEnd + PowerShell profile block)? [y/N]"
+    if ($reviveOptIn -in @('y', 'Y', 'yes')) {
+        node $ReviveEngine install --pwsh --no-codex --no-pi --no-omp --no-droid --no-cursor --no-copilot --no-muse
+        node $ReviveEngine doctor
+    } else {
+        Write-Host "Skipped Revive hooks. Run later: node `"$ReviveEngine`" install --pwsh --no-codex --no-pi --no-omp --no-droid --no-cursor --no-copilot --no-muse" -ForegroundColor Yellow
+    }
+}
+
 # 4. Optional: GitHub Copilot CLI (opt-in)
 $copilotOptIn = Read-Host "`nWould you like to check/configure GitHub Copilot CLI? [y/N]"
 if ($copilotOptIn -in @('y', 'Y', 'yes')) {

@@ -198,7 +198,7 @@ export const tabBarMethods = {
       })
       .child(this.renderTabList(t))
       .child(this.renderToolbar(t));
-    if (window()?.buttons) bar.children(this.windowButtons());
+    if (window()?.buttons && this.ownWindowButtons()) bar.children(this.windowButtons());
     const preview = this.dragPreview(t);
     if (preview) bar.child(preview);
     return bar;
@@ -289,6 +289,12 @@ export const tabBarMethods = {
         cx.stop_propagation();
         this.finishActionDrag(cx);
       });
+  },
+
+  // dev-config: the window-controls mod draws these at the right of the tab row.
+  // Set props.windowButtons to true in the layout to draw them here instead.
+  ownWindowButtons() {
+    return this.config().windowButtons === true;
   },
 
   // Windows and Linux draw their own window controls.

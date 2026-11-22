@@ -1,0 +1,5 @@
+{
+  "description": "Coordinator (petekp): agents nested under coordinators in the sidebar. Panels use better-files/better-changes.",
+  "mods": ["pocketspeak", "window-controls", "coordinator-tabs", "coordinator-agents", "coordinator-spaces", "coordinator-topbar", "better-files", "better-changes", "better-icons", "file-icons", "revive"],
+  "keys": { "cmd-k": "mod.open:coordinator-agents", "ctrl-shift-r": "mod.open:revive" }
+}

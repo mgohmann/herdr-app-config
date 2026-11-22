@@ -16,10 +16,10 @@
           "content": {
             "mod": "workspace-chrome"
           },
+          "window_drag": true,
           "size": {
             "px": 46
-          },
-          "window_drag": true
+          }
         },
         {
           "id": "sidebar-lists",
@@ -123,7 +123,8 @@
                         "target": "inbox"
                       }
                     }
-                  ]
+                  ],
+                  "windowButtons": false
                 }
               },
               "size": {
@@ -141,6 +142,25 @@
                 "mod": "better-sidebar",
                 "props": {
                   "view": "panel-toggle"
+                }
+              }
+            },
+            {
+              "id": "window-controls",
+              "type": "block",
+              "size": {
+                "px": 132
+              },
+              "content": {
+                "mod": "window-controls",
+                "props": {
+                  "width": 44,
+                  "icon": 16,
+                  "order": [
+                    "minimize",
+                    "maximize",
+                    "close"
+                  ]
                 }
               }
             }
@@ -237,6 +257,16 @@
           },
           "size": {
             "px": 28
+          }
+        },
+        {
+          "id": "pocketspeak",
+          "type": "block",
+          "size": {
+            "px": 30
+          },
+          "content": {
+            "mod": "pocketspeak"
           }
         }
       ],

@@ -1,0 +1,5 @@
+{
+  "description": "Baseline: your current layout (better-sidebar, better-tabs, Files/Changes/PRs/Inbox).",
+  "mods": ["pocketspeak", "window-controls", "better-sidebar", "better-tabs", "better-files", "better-changes", "better-icons", "branch-pr", "file-icons", "t3-inbox", "better-config", "revive"],
+  "keys": { "ctrl-shift-r": "mod.open:revive" }
+}
