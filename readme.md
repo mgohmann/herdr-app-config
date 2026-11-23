@@ -47,6 +47,14 @@ The same row has a **Sync** button like VS Code's: it shows how far the branch i
 
 Set `ai.harness` to `claude`, `antigravity`, `copilot` or `opencode` to pin one. The diff is capped at 20,000 characters (`ai.diff_limit`) to stay under Windows' command-line limit. The staged diff goes to whichever provider the chosen CLI uses.
 
+## PocketSpeak speaking indicator (`better-sidebar`)
+
+`better-sidebar` is patched here (`herdr/mods/better-sidebar/views/agents.js` and `icons/waveform.svg`) to read `shared("pocketspeak.speaking")` (`{ speaking: boolean, terminals: string[], queued: string[] }`) published by the PocketSpeak `herdr-app` mod (no indicator is shown if PocketSpeak is absent or disconnected):
+
+- **Actively speaking (`#F5A191`):** highlights matching agent rows (including all agents in an Announcer Mode batch) and lead-terminal tab rows with a coral left accent bar, subtle row tint, and a pulsing waveform icon.
+- **Queued to speak (`#BB9AE2`):** shows a lavender left accent bar, subtle row tint, and waveform icon until playback starts or is cleared.
+- **Scope:** applies to `agentRow` and `tabRow` (lead terminal); collapsed `railRow` and `subRow` sub-agents do not display the indicator.
+
 ## Layout variants (A/B testing)
 
 ```powershell

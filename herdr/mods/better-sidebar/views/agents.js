@@ -72,6 +72,8 @@ const SORTS = [
 const sortOf = () => SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[0];
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
 const SECTION_STATUS = { 4: "blocked", 3: "done", 2: "working" };
+// 6-digit hex colors so +"1a"/+"14" alpha suffixes remain valid.
+const SPEAK_COLORS = { speaking: "#F5A191", queued: "#BB9AE2" };
 
 // PR-12, INS-4 and PLAT-work, also after a folder such as feature/INS-4: capitals
 // need nothing more, while lower case needs a number so herdr-mods is no prefix.
@@ -403,6 +405,7 @@ export class Agents {
     const now = Date.now();
     const unordered = agents();
     this.listed = new Map(unordered.map((a) => [a.address, a.status]));
+    this.refreshSpeakSets();
     this.track(unordered, now);
     this.hold(unordered);
     this.prunePins(all);
@@ -572,14 +575,56 @@ export class Agents {
       );
   }
 
+  refreshSpeakSets() {
+    const ps = shared("pocketspeak.speaking");
+    if (!ps || typeof ps !== "object") {
+      this._speakSets = { speaking: null, queued: null };
+      return;
+    }
+    this._speakSets = {
+      speaking: ps.speaking && Array.isArray(ps.terminals) ? new Set(ps.terminals) : null,
+      queued: Array.isArray(ps.queued) ? new Set(ps.queued) : null,
+    };
+  }
+
+  speakStateOf(address) {
+    if (!address) return null;
+    if (!this._speakSets) this.refreshSpeakSets();
+    const { speaking, queued } = this._speakSets;
+    if (speaking?.has(address)) return "speaking";
+    if (queued?.has(address)) return "queued";
+    return null;
+  }
+
+  speakAccentBar(color) {
+    if (!color) return null;
+    return div().absolute().left(2).top(8).w(2).h(14).rounded(1).bg(color);
+  }
+
+  speakBadge(speakState, color) {
+    if (!color) return null;
+    const iconEl = Icon("waveform", 13).text_color(color);
+    if (speakState === "speaking") {
+      return iconEl
+        .tooltip("Speaking")
+        .loop("opacity", { from: 0.4, to: 1, period: 850, easing: "ease-in-out" });
+    }
+    return iconEl.opacity(0.75).tooltip("Queued to speak");
+  }
+
   agentRow(a, subs, view, t) {
     const pic = icon(a.program, 16, t.foreground);
     const hovered = this.hovered === a.address;
     const when = this.since(a);
+    const speakState = this.speakStateOf(a.address);
+    const speakColor = speakState ? SPEAK_COLORS[speakState] : null;
+    const speakBar = this.speakAccentBar(speakColor);
+    const speakIcon = this.speakBadge(speakState, speakColor);
     // An agent on another machine (`vps/t7`) says which.
     const machine = a.address.includes("/") ? a.address.split("/")[0] : null;
     return h_flex()
       .id(`ag-${a.address}`)
+      .relative()
       .px(8)
       .h(30)
       .flex_none()
@@ -587,6 +632,9 @@ export class Agents {
       .items_center()
       .gap(9)
       .when(a.focused, (el) => el.bg(t.selected))
+      .when(Boolean(speakColor) && !a.focused, (el) =>
+        el.bg(speakColor + (speakState === "speaking" ? "1a" : "14")),
+      )
       .cursor_pointer()
       .hover((s) => s.bg(t.hover))
       .on_hover((on, cx) => {
@@ -595,6 +643,7 @@ export class Agents {
         cx.notify();
       })
       .on_click(() => run("pane.focus", { pane: a.pane }))
+      .when(Boolean(speakBar), (el) => el.child(speakBar))
       .when(Boolean(pic), (el) => el.child(this.agentIcon(a, pic, subs)))
       .child(this.agentName(a, view, t))
       .when(Boolean(machine), (el) =>
@@ -611,7 +660,8 @@ export class Agents {
             .child(duration(view.now - when)),
         ),
       )
-      .child(this.status(t, a, view.byPriority && !this.pins.includes(a.address)));
+      .child(this.status(t, a, view.byPriority && !this.pins.includes(a.address)))
+      .when(Boolean(speakIcon), (el) => el.child(speakIcon));
   }
 
   // A tab with no agent, under its space in the lists view: its program and its name.
@@ -630,8 +680,13 @@ export class Agents {
       ? { icon: head.icon, tint: !head.color }
       : { icon: shared("mod-icons")?.[mods[0]?.mod], tint: true };
     const pic = icon(l?.program, 16, t.dim) ?? icon(pub, 16, t.dim);
+    const speakState = this.speakStateOf(l?.terminal);
+    const speakColor = speakState ? SPEAK_COLORS[speakState] : null;
+    const speakBar = this.speakAccentBar(speakColor);
+    const speakIcon = this.speakBadge(speakState, speakColor);
     return h_flex()
       .id(`tab-${tab.id}`)
+      .relative()
       .px(8)
       .h(30)
       .flex_none()
@@ -639,12 +694,16 @@ export class Agents {
       .items_center()
       .gap(9)
       .when(lit, (el) => el.bg(t.selected))
+      .when(Boolean(speakColor) && !lit, (el) =>
+        el.bg(speakColor + (speakState === "speaking" ? "1a" : "14")),
+      )
       .cursor_pointer()
       .hover((s) => s.bg(t.hover))
       .on_click(() => {
         run("space.select", { id: w.id });
         run("tab.select", { id: tab.id });
       })
+      .when(Boolean(speakBar), (el) => el.child(speakBar))
       .child(pic ?? div().w(16).flex_none())
       .child(
         h_flex()
@@ -654,7 +713,8 @@ export class Agents {
           .items_center()
           .child(div().min_w(0).truncate().text_color(lit ? t.foreground : t.muted).child(name))
           .when(Boolean(prog) && prog !== name, (el) => el.child(this.programName(prog, t))),
-      );
+      )
+      .when(Boolean(speakIcon), (el) => el.child(speakIcon));
   }
 
   // The program, quietly after a row's name under its space.
