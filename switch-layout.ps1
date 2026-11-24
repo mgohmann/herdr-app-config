@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Switch between dev-config Herdr layout variants (estro, estro-asks, coordinator).
+    Switch between dev-config Herdr layout variants (estro only).
 .DESCRIPTION
     For the chosen variant: copies its layout + required mods into ~/.config/herdr-app
     (only when they differ), merges its layout-scoped keys, installs optional config files,
@@ -9,9 +9,9 @@
     ~/.config/herdr-app/backups/dev-config/<timestamp>/ (never inside layouts/ or mods/).
 .EXAMPLE
     .\switch-layout.ps1 list
-    .\switch-layout.ps1 estro-asks
+    .\switch-layout.ps1 estro
     .\switch-layout.ps1 next
-    .\switch-layout.ps1 coordinator -DryRun
+    .\switch-layout.ps1 estro -DryRun
 #>
 [CmdletBinding()]
 param(

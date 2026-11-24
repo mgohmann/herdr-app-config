@@ -1,6 +1,0 @@
-{
-  "description": "estro + Asks panel (herdr-agent-ask). Adds an Asks tab button and a headless detection engine; classifier off.",
-  "mods": ["pocketspeak", "window-controls", "better-sidebar", "better-tabs", "better-files", "better-changes", "better-icons", "branch-pr", "file-icons", "t3-inbox", "better-config", "asks", "asks-engine", "revive"],
-  "keys": { "ctrl-shift-a": "asks-engine.toggle", "ctrl-shift-r": "mod.open:revive" },
-  "config": { "asks.json": "config/asks.json" }
-}

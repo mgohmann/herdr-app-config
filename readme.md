@@ -4,8 +4,8 @@ Reproducible, Windows-first **Herdr** developer environment configuration.
 
 ## What's Included
 
-- **Layouts:** `estro` ([munza/herdr-mods](https://github.com/munza/herdr-mods/tree/main/estro)), plus the `estro-asks` and `coordinator` variants (see below).
-- **Mods** (vendored in `herdr/mods/`): `better-sidebar`, `better-tabs`, `better-files`, `better-changes`, `better-icons`, `better-config`, `file-icons`, `branch-pr`, `t3-inbox`, `window-controls`, `revive`, and the Asks/Coordinator mods used by the variants.
+- **Layout:** `estro` ([munza/herdr-mods](https://github.com/munza/herdr-mods/tree/main/estro)), the only layout supported, with a **Rewrite** panel tab added.
+- **Mods** (vendored in `herdr/mods/`): `better-sidebar`, `better-tabs`, `better-files`, `better-changes`, `better-icons`, `better-config`, `branch-pr`, `t3-inbox`, `window-controls`, `revive` and [`rewrite`](https://github.com/mgohmann/herdrmod-rewrite).
 - **Theme:** `vesper` (`herdr/themes/`), copied by `bootstrap.ps1`. It is selected only if `settings.json` has no theme yet; an existing choice is left alone.
 - **Not included:** global key bindings and other Herdr settings. Those stay local to each machine.
 
@@ -22,7 +22,7 @@ Reproducible, Windows-first **Herdr** developer environment configuration.
 .ootstrap.ps1
 ```
 
-The bootstrapper copies the layouts and mods into `~/.config/herdr-app/` (no symlinks required) and prompts before overwriting existing ones. It then builds the `branch-pr` helper if Go is available, warns if PocketSpeak is missing, offers an opt-in **GitHub Copilot CLI** check, and finally runs `switch-layout.ps1 estro` to apply the estro variant (layout-scoped keys, Revive hooks, and switching to it).
+The bootstrapper copies the layouts and mods into `~/.config/herdr-app/` (no symlinks required) and prompts before overwriting existing ones. It then builds the `branch-pr` helper if Go is available, warns if PocketSpeak is missing, offers an opt-in **GitHub Copilot CLI** check, and finally runs `switch-layout.ps1 estro` to apply the estro layout (layout-scoped keys, Revive hooks, and switching to it).
 
 Pass `-Force` to overwrite existing layouts/mods without prompting:
 
@@ -55,21 +55,19 @@ Set `ai.harness` to `claude`, `antigravity`, `copilot` or `opencode` to pin one.
 - **Queued to speak (`#BB9AE2`):** shows a lavender left accent bar, subtle row tint, and waveform icon until playback starts or is cleared.
 - **Scope:** applies to `agentRow` and `tabRow` (lead terminal); collapsed `railRow` and `subRow` sub-agents do not display the indicator.
 
-## Layout variants (A/B testing)
+## Rewrite panel (`rewrite`)
+
+Vendored from [mgohmann/herdrmod-rewrite](https://github.com/mgohmann/herdrmod-rewrite) (commit `f7fe405`, MIT; tests and plan omitted). It turns rough or dictated text into polished output via your local coding-agent CLI. `estro.json` adds a **Rewrite** tab button and a `rewrite` block in `panel-body`. Settings live under `settings` in the installed `mods/rewrite/mod.json`. To update, re-copy the upstream files and re-check the layout wiring.
+
+## Layout (`estro`)
+
+`herdr/variants/estro.json` is the manifest: the mods to install, plus layout-scoped keys. `bootstrap.ps1` installs only the `estro` layout and the mods listed there. Re-apply it alone with:
 
 ```powershell
-.\switch-layout.ps1 list              # variants; * = current
-.\switch-layout.ps1 estro-asks        # install what it needs, then switch
-.\switch-layout.ps1 next              # cycle
-.\switch-layout.ps1 coordinator -DryRun
+.\switch-layout.ps1 estro            # install what changed, then switch
+.\switch-layout.ps1 estro -DryRun
 ```
 
-| Variant | What it is |
-|---|---|
-| `estro` | Baseline (current). |
-| `estro-asks` | estro + [herdr-agent-ask](https://github.com/sachin-philip/herdr-agent-ask) panel. Asks tab button, `ctrl-shift-a` toggles (this layout only). Classifier is **off** (`herdr/config/asks.json`), so nothing is sent to Claude/Codex. |
-| `coordinator` | [petekp/coordinator](https://github.com/petekp/coordinator) sidebar; panels use better-files/better-changes. Update check disabled. `cmd-k` opens the agent jumper. |
+[Revive](https://github.com/dmazlum/herdr-revive) (`ctrl-shift-r`, layout-scoped) brings Claude Code sessions back after a reboot or core restart. `switch-layout.ps1` copies the mod and the key, and installs the hooks (`~/.claude/settings.json`) and the PowerShell profile block if `revive.mjs doctor` says they are missing. Only Claude Code is wired up; the other agents are skipped. Restart running Claude Code and PowerShell sessions after the first install. Undo with `node ~/.config/herdr-app/mods/revive/revive.mjs uninstall`. Vendored upstream commit: `5f2a1f5` (v0.12.0, MIT, license in `herdr/vendor/`).
 
-All variants also include [Revive](https://github.com/dmazlum/herdr-revive) (`ctrl-shift-r`, layout-scoped): it brings Claude Code sessions back after a reboot or core restart. `switch-layout.ps1` copies the mod and the key, and installs the hooks (`~/.claude/settings.json`) and the PowerShell profile block if `revive.mjs doctor` says they are missing. Only Claude Code is wired up; pi, omp, Codex, Droid, Cursor, Copilot and Muse are skipped. Restart running Claude Code and PowerShell sessions after the first install. Undo with `node ~/.config/herdr-app/mods/revive/revive.mjs uninstall`. Vendored upstream commit: `5f2a1f5` (v0.12.0, MIT, license in `herdr/vendor/`).
-
-Variants live in `herdr/variants/<name>.json` (mods, layout-scoped keys, optional config). Backups of anything overwritten go to `~/.config/herdr-app/backups/dev-config/`. Vendored upstream commits: herdr-agent-ask `d6e2c3a`, coordinator `3850c8d` (licenses in `herdr/vendor/`). Cockpit is deferred (no Windows binary).
+Backups of anything overwritten go to `~/.config/herdr-app/backups/dev-config/`.

@@ -122,6 +122,18 @@
                         "stack": "panel-body",
                         "target": "inbox"
                       }
+                    },
+                    {
+                      "id": "rewrite",
+                      "label": "Rewrite",
+                      "icon": "mods/rewrite/icons/rewrite.svg",
+                      "group": "panels",
+                      "action": {
+                        "type": "panel",
+                        "container": "panel",
+                        "stack": "panel-body",
+                        "target": "rewrite"
+                      }
                     }
                   ],
                   "windowButtons": false
@@ -233,6 +245,13 @@
                       "type": "block",
                       "content": {
                         "mod": "t3-inbox"
+                      }
+                    },
+                    {
+                      "id": "rewrite",
+                      "type": "block",
+                      "content": {
+                        "mod": "rewrite"
                       }
                     }
                   ],

@@ -2,7 +2,7 @@
 .SYNOPSIS
     Interactive bootstrapper for dev-config (Herdr + optional GitHub Copilot CLI).
 .DESCRIPTION
-    Copies the estro layout and vetted mods into ~/.config/herdr-app/ without symlinks.
+    Copies the estro layout and the mods listed in herdr/variants/estro.json (including rewrite) into ~/.config/herdr-app/ without symlinks.
     Optionally configures GitHub Copilot CLI if the user opts in.
 #>
 
@@ -25,8 +25,9 @@ New-Item -ItemType Directory -Force -Path $HerdrLayoutsDir, $HerdrModsDir | Out-
 
 # 2. Copy layouts
 $SourceLayouts = Join-Path $RepoRoot "herdr\layouts"
+$Manifest = Get-Content (Join-Path $RepoRoot "herdr\variants\estro.json") -Raw | ConvertFrom-Json -AsHashtable
 if (Test-Path $SourceLayouts) {
-    Get-ChildItem $SourceLayouts | ForEach-Object {
+    Get-ChildItem $SourceLayouts -Filter "estro.json" | ForEach-Object {
         $dest = Join-Path $HerdrLayoutsDir $_.Name
         # Remove any stale directory with the same base name (e.g. old layouts/estro/ folder)
         if (-not $_.PSIsContainer) {
@@ -53,7 +54,7 @@ if (Test-Path $SourceLayouts) {
 # 3. Copy mods
 $SourceMods = Join-Path $RepoRoot "herdr\mods"
 if (Test-Path $SourceMods) {
-    Get-ChildItem $SourceMods -Directory | ForEach-Object {
+    Get-ChildItem $SourceMods -Directory | Where-Object { $_.Name -in $Manifest['mods'] } | ForEach-Object {
         $dest = Join-Path $HerdrModsDir $_.Name
         if ((Test-Path $dest) -and -not $Force) {
             $ans = Read-Host "Mod '$($_.Name)' already exists. Overwrite? [y/N]"
@@ -80,7 +81,7 @@ if (Test-Path $SourceMods) {
 
 # 2b. Themes: copy vendored themes, and select vesper if no theme is chosen yet
 $HerdrThemesDir = Join-Path $HerdrConfigDir "themes"
-$SourceThemes = Join-Path $RepoRoot "herdr	hemes"
+$SourceThemes = Join-Path $RepoRoot "herdr\themes"
 if (Test-Path $SourceThemes) {
     New-Item -ItemType Directory -Force -Path $HerdrThemesDir | Out-Null
     Get-ChildItem $SourceThemes -Filter *.json | ForEach-Object {
